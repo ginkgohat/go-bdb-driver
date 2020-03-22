@@ -139,3 +139,7 @@ func (c *Client) GetBlockHeight(ctx context.Context, transactionID string) (heig
 	err = c.get(ctx, path, &heights)
 	return
 }
+
+func (c *Client) NewKeyPair(ctx context.Context) (keys *types.KeyPair, err error) {
+	return types.NewKeyPair()
+}

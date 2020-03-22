@@ -2,13 +2,13 @@ package types
 
 import (
 	"crypto"
+	"crypto/ed25519"
 	"crypto/rand"
 	"strings"
 
 	"github.com/go-interledger/cryptoconditions"
 	"github.com/mr-tron/base58/base58"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ed25519"
 )
 
 type KeyPair struct {
@@ -16,10 +16,9 @@ type KeyPair struct {
 	PublicKey  ed25519.PublicKey  `json:"publicKey"`
 }
 
-// TODO add configurable seed to GenerateKey
+// NewKeyPair
 func NewKeyPair() (*KeyPair, error) {
 	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not generate new ED25519 KeyPair")
 	}
@@ -28,7 +27,28 @@ func NewKeyPair() (*KeyPair, error) {
 		PublicKey:  pubKey,
 		PrivateKey: privKey,
 	}, nil
+}
 
+// Seed
+func (k *KeyPair) Seed() []byte {
+	return k.PrivateKey.Seed()
+}
+
+// GenPublicKey
+func GenPublicKey(priv ed25519.PrivateKey) ed25519.PublicKey {
+	publicKey := make([]byte, ed25519.PublicKeySize)
+	copy(publicKey, priv[32:])
+	return publicKey
+}
+
+// GenKeyPairFromSeed
+func GenKeyPairFromSeed(seed []byte) *KeyPair {
+	privKey := ed25519.NewKeyFromSeed(seed)
+	keys := &KeyPair{
+		PrivateKey: privKey,
+		PublicKey:  GenPublicKey(privKey),
+	}
+	return keys
 }
 
 const cost = 131072

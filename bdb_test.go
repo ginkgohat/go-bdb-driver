@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const baseURL = "http://192.168.10.252:9984"
+const baseURL = "http://geekpi.top:15522" // http://localhost:9984
 
 var (
 	httpClient = http.DefaultClient
@@ -28,12 +28,11 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.bdbURL)
+			_, err := New(tt.args.bdbURL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Log(got)
 		})
 	}
 }
@@ -435,6 +434,46 @@ func TestClient_GetBlockHeight(t *testing.T) {
 			//	t.Errorf("GetBlockHeights() gotHeights = %v, want %v", gotHeights, tt.wantHeights)
 			//}
 			t.Log(gotHeight)
+		})
+	}
+}
+
+func TestClient_NewKeyPair(t *testing.T) {
+	type fields struct {
+		baseURL    string
+		httpClient *http.Client
+		baseHeader http.Header
+	}
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		// wantKeys *types.KeyPair
+		wantErr bool
+	}{
+		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background()}, wantErr: false},
+		{name: "case2", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background()}, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				baseURL:    tt.fields.baseURL,
+				httpClient: tt.fields.httpClient,
+				baseHeader: tt.fields.baseHeader,
+			}
+			gotKeys, err := c.NewKeyPair(tt.args.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewKeyPair() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			//if !reflect.DeepEqual(gotKeys, tt.wantKeys) {
+			//	t.Errorf("NewKeyPair() gotKeys = %v, want %v", gotKeys, tt.wantKeys)
+			//}
+			val, _ := json.Marshal(gotKeys)
+			t.Log(string(val))
 		})
 	}
 }
