@@ -1,4 +1,4 @@
-package types
+package bdb
 
 import (
 	"crypto"
@@ -51,12 +51,8 @@ func GenKeyPairFromSeed(seed []byte) *KeyPair {
 	return keys
 }
 
-const cost = 131072
-
 func NewEd25519Condition(pubKey ed25519.PublicKey) *cryptoconditions.Condition {
-
-	// TODO fix hard-coded cost
-	return cryptoconditions.NewSimpleCondition(cryptoconditions.CTEd25519Sha256, pubKey, cost)
+	return cryptoconditions.NewSimpleCondition(cryptoconditions.CTEd25519Sha256, pubKey, conditionConst)
 }
 
 /*
@@ -88,11 +84,11 @@ func (t *Transaction) Sign(keyPairs []*KeyPair) error {
 			serializedTxn.WriteString(string(input.Fulfills.OutputIndex))
 		}
 
-		bytes_to_sign := []byte(serializedTxn.String())
+		bytesToSign := []byte(serializedTxn.String())
 
 		// rand reader is ignored within Sign method; crypto.Hash(0) is sanity check to
 		// make sure bytes_to_sign is not hashed already - ed25519.PrivateKey cannot sign hashed msg
-		signature, err := keyPair.PrivateKey.Sign(rand.Reader, bytes_to_sign[:], crypto.Hash(0))
+		signature, err := keyPair.PrivateKey.Sign(rand.Reader, bytesToSign[:], crypto.Hash(0))
 
 		// https://tools.ietf.org/html/draft-thomas-crypto-conditions-03#section-8.5
 		ed25519Fulfillment, err := cryptoconditions.NewEd25519Sha256(keyPair.PublicKey, signature)

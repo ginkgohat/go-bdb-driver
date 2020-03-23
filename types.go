@@ -1,4 +1,4 @@
-package types
+package bdb
 
 type Node struct {
 	API struct {

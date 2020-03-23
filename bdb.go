@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/ginkgohat/go-bdb-driver/types"
 )
 
 type Client struct {
@@ -53,19 +51,19 @@ func (c *Client) get(ctx context.Context, path string, out interface{}) error {
 }
 
 // GetNodeInfo get bigchaindb node info
-func (c *Client) GetNodeInfo(ctx context.Context) (node types.Node, err error) {
+func (c *Client) GetNodeInfo(ctx context.Context) (node Node, err error) {
 	err = c.get(ctx, "", &node)
 	return
 }
 
 // GetNodeInfo get bigchaindb root endpoint info
-func (c *Client) GetEndpoint(ctx context.Context) (endpoint types.Endpoint, err error) {
+func (c *Client) GetEndpoint(ctx context.Context) (endpoint Endpoint, err error) {
 	err = c.get(ctx, apiPath, &endpoint)
 	return
 }
 
 // GetTransaction get the transaction with the ID
-func (c *Client) GetTransaction(ctx context.Context, transactionID string) (transaction types.Transaction, err error) {
+func (c *Client) GetTransaction(ctx context.Context, transactionID string) (transaction Transaction, err error) {
 	path := fmt.Sprintf("%s/%s/%s", apiPath, transactionPath, transactionID)
 	err = c.get(ctx, path, &transaction)
 	return
@@ -74,7 +72,7 @@ func (c *Client) GetTransaction(ctx context.Context, transactionID string) (tran
 // GetTransactionList Get a list of transactions that use an asset with the ID
 // asset_id the asset id
 // operation is CREATE or TRANSFER or ""(all)
-func (c *Client) GetTransactionList(ctx context.Context, assetID, operation string, lastTx bool) (transactions []types.Transaction, err error) {
+func (c *Client) GetTransactionList(ctx context.Context, assetID, operation string, lastTx bool) (transactions []Transaction, err error) {
 	path := fmt.Sprintf("%s/%s/?asset_id=%s&last_tx=%v", apiPath, transactionPath, assetID, lastTx)
 	if operation == "CREATE" || operation == "TRANSFER" {
 		path = fmt.Sprintf("%s&operation=%s", path, operation)
@@ -85,7 +83,7 @@ func (c *Client) GetTransactionList(ctx context.Context, assetID, operation stri
 
 // GetOutputs Get transaction outputs by public key
 // status spent | unspent | ""(all)
-func (c *Client) GetOutputs(ctx context.Context, publicKey string, status string) (outputs []types.OutputLocation, err error) {
+func (c *Client) GetOutputs(ctx context.Context, publicKey string, status string) (outputs []OutputLocation, err error) {
 	path := fmt.Sprintf("%s/%s/?public_key=%s", apiPath, outputPath, publicKey)
 	if status == unspent {
 		path = fmt.Sprintf("%s&spent=%v", path, false)
@@ -98,7 +96,7 @@ func (c *Client) GetOutputs(ctx context.Context, publicKey string, status string
 }
 
 // GetAssets get all the assets that match a given text search.
-func (c *Client) GetAssets(ctx context.Context, search string, limit int) (assets []types.Asset, err error) {
+func (c *Client) GetAssets(ctx context.Context, search string, limit int) (assets []Asset, err error) {
 	path := fmt.Sprintf("%s/%s/?search=%s", apiPath, assetPath, search)
 	if limit > 0 {
 		path = fmt.Sprintf("%s&limit=%v", path, limit)
@@ -108,7 +106,7 @@ func (c *Client) GetAssets(ctx context.Context, search string, limit int) (asset
 }
 
 // GetMetadatas get all the metadatas that match a given text search.
-func (c *Client) GetMetadatas(ctx context.Context, search string, limit int) (metadatas []types.Metadata, err error) {
+func (c *Client) GetMetadatas(ctx context.Context, search string, limit int) (metadatas []Metadata, err error) {
 	path := fmt.Sprintf("%s/%s/?search=%s", apiPath, metadataPath, search)
 	if limit > 0 {
 		path = fmt.Sprintf("%s&limit=%v", path, limit)
@@ -118,14 +116,14 @@ func (c *Client) GetMetadatas(ctx context.Context, search string, limit int) (me
 }
 
 // GetValidators the local validators set of a given node.
-func (c *Client) GetValidators(ctx context.Context) (validators []types.Validator, err error) {
+func (c *Client) GetValidators(ctx context.Context) (validators []Validator, err error) {
 	path := fmt.Sprintf("%s/%s", apiPath, validatorPath)
 	err = c.get(ctx, path, &validators)
 	return
 }
 
 // GetBlock get the block with the height
-func (c *Client) GetBlock(ctx context.Context, height int) (block types.Block, err error) {
+func (c *Client) GetBlock(ctx context.Context, height int) (block Block, err error) {
 	path := fmt.Sprintf("%s/%s/%d", apiPath, blockPath, height)
 	err = c.get(ctx, path, &block)
 	return
@@ -140,6 +138,6 @@ func (c *Client) GetBlockHeight(ctx context.Context, transactionID string) (heig
 	return
 }
 
-func (c *Client) NewKeyPair(ctx context.Context) (keys *types.KeyPair, err error) {
-	return types.NewKeyPair()
+func (c *Client) NewKeyPair(ctx context.Context) (keys *KeyPair, err error) {
+	return NewKeyPair()
 }

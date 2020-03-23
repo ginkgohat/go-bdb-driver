@@ -1,20 +1,17 @@
-package types
+package bdb
 
 import (
-	"encoding/json"
-
-	"encoding/hex"
-
 	"bytes"
-
-	"strings"
-
+	"encoding/hex"
+	"encoding/json"
 	"net/url"
+	"strings"
 
 	"github.com/go-interledger/cryptoconditions"
 	"github.com/kalaspuffar/base64url"
 	"github.com/mr-tron/base58/base58"
 	"github.com/pkg/errors"
+
 	"golang.org/x/crypto/ed25519"
 	"golang.org/x/crypto/sha3"
 )
@@ -27,7 +24,7 @@ func NewTransaction(
 	outputs []Output,
 ) (*Transaction, error) {
 
-	if !(operation == "CREATE" || operation == "TRANSFER") {
+	if !(operation == create || operation == transfer) {
 		return &Transaction{}, errors.New("Not a valid operation - expecting 'CREATE' or 'TRANSFER'")
 	}
 
@@ -138,7 +135,7 @@ func NewOutput(condition cryptoconditions.Condition, amount string) (Output, err
 func generateURI(cType, encodedFingerprint string) string {
 	params := make(url.Values)
 	// FIXME hardcoded costs
-	params.Set("cost", "131072")
+	params.Set("cost", conditionConsts)
 	params.Set("fpt", strings.ToLower(cType))
 
 	uri := url.URL{
@@ -177,7 +174,6 @@ func (t *Transaction) createID() (string, error) {
 }
 
 func (t *Transaction) String() (string, error) {
-
 	dbytes, err := t.JSON()
 	if err != nil {
 		return "", err

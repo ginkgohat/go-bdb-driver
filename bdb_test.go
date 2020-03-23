@@ -117,7 +117,7 @@ func TestClient_GetTransaction(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantTransaction types.Transaction
+		// wantTransaction Transaction
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), "d36547a9a5f3b5a88a5bb97943f4074e23d2bebb494e603268209b8af121e127"}, wantErr: false},
@@ -157,7 +157,7 @@ func TestClient_GetTransactionList(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantTransactions []types.Transaction
+		// wantTransactions []Transaction
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), "18da0b91c0d638c522b2cf58e2bc9a2195069694b27b3ded40f2e916225c1b21", "TRANSFER", false}, wantErr: false},
@@ -202,7 +202,7 @@ func TestClient_GetOutputs(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantOutputs []types.OutputLocation
+		// wantOutputs []OutputLocation
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), "2LeKKDqhnYvHx8oXDE4PxXpg31NM7d2NgwXXCAxasuuv", spent}, wantErr: false},
@@ -245,7 +245,7 @@ func TestClient_GetAssets(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantAssets []types.Asset
+		// wantAssets []Asset
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), "BigchainDB", 0}, wantErr: false},
@@ -289,7 +289,7 @@ func TestClient_GetMetadatas(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantMetadatas []types.Metadata
+		// wantMetadatas []Metadata
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), "1201", 0}, wantErr: false},
@@ -330,7 +330,7 @@ func TestClient_GetValidators(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantValidators []types.Validator
+		// wantValidators []Validator
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background()}, wantErr: false},
@@ -370,7 +370,7 @@ func TestClient_GetBlock(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantBlock types.Block
+		// wantBlock Block
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background(), 1}, wantErr: false},
@@ -451,7 +451,7 @@ func TestClient_NewKeyPair(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		// wantKeys *types.KeyPair
+		// wantKeys *KeyPair
 		wantErr bool
 	}{
 		{name: "case1", fields: fields{baseURL: baseURL, httpClient: httpClient, baseHeader: httpHeader}, args: args{context.Background()}, wantErr: false},

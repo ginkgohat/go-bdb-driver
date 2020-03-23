@@ -17,4 +17,9 @@ const (
 	// spent | unspent
 	spent   = "spent"
 	unspent = "unspent"
+
+	// condition
+	conditionConst  = 131072
+	conditionConsts = "131072"
+	conditionType   = "ed25519-sha-256"
 )
