@@ -1,10 +1,12 @@
 package bdb
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -39,6 +41,30 @@ func New(bdbURL string) (*Client, error) {
 func (c *Client) get(ctx context.Context, path string, out interface{}) error {
 	targetURL := fmt.Sprintf("%s/%s", c.baseURL, path)
 	resp, err := c.httpClient.Get(strings.TrimSpace(targetURL))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(resp.Status)
+	}
+	return json.NewDecoder(resp.Body).Decode(&out)
+}
+
+func (c *Client) post(ctx context.Context, path string, in, out interface{}) error {
+	targetURL := fmt.Sprintf("%s/%s", c.baseURL, path)
+
+	var buf io.ReadWriter
+	if in != nil {
+		buf = new(bytes.Buffer)
+		err := json.NewEncoder(buf).Encode(in)
+		if err != nil {
+			return err
+		}
+	}
+
+	resp, err := c.httpClient.Post(targetURL, "json", buf)
 	if err != nil {
 		return err
 	}
@@ -138,6 +164,12 @@ func (c *Client) GetBlockHeight(ctx context.Context, transactionID string) (heig
 	return
 }
 
-func (c *Client) NewKeyPair(ctx context.Context) (keys *KeyPair, err error) {
-	return NewKeyPair()
+func (c *Client) PostTransaction(ctx context.Context, mode string, tx interface{}) (*Transaction, error) {
+	var out *Transaction
+	if !(mode == sync || mode == commit) {
+		mode = async
+	}
+	path := fmt.Sprintf("%s/%s?mode=%s", apiPath, transactionPath, mode)
+	err := c.post(ctx, path, tx, out)
+	return out, err
 }

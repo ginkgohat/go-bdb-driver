@@ -98,7 +98,8 @@ func (t *Transaction) Sign(keyPairs []*KeyPair) error {
 
 		// TODO - Not sure whether this should be ed25519Fulfillment.Encode()
 		// TODO - or ed25519Fulfillment.Condition().Encode()
-		ff, err := ed25519Fulfillment.Encode()
+		// ff, err := ed25519Fulfillment.Encode()
+		ff, err := ed25519Fulfillment.Condition().Encode()
 		if err != nil {
 			return err
 		}

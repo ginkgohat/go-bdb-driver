@@ -21,4 +21,9 @@ const (
 	// condition
 	conditionConst  = 131072
 	conditionConsts = "131072"
+
+	// post mode
+	async  = "async"
+	sync   = "sync"
+	commit = "commit"
 )
