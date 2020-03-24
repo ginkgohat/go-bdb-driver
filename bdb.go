@@ -31,7 +31,7 @@ func NewClient(bdbURL string, client *http.Client, header http.Header) (*Client,
 }
 
 // New default bigchaindb client
-// bdbURL host+port https://example.com:9984、http://localhost:9984
+// bdbURL host+port https://example.com:9984、
 func New(bdbURL string) (*Client, error) {
 	return NewClient(bdbURL, http.DefaultClient, http.Header{})
 }
