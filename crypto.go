@@ -4,10 +4,10 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
+	"github.com/kalaspuffar/base64url"
 	"strings"
 
-	"github.com/go-interledger/cryptoconditions"
-	"github.com/mr-tron/base58/base58"
+	cryptoconditions "github.com/Mashatan/go-cryptoconditions"
 	"github.com/pkg/errors"
 )
 
@@ -51,7 +51,7 @@ func GenKeyPairFromSeed(seed []byte) *KeyPair {
 	return keys
 }
 
-func NewEd25519Condition(pubKey ed25519.PublicKey) *cryptoconditions.Condition {
+func NewEd25519Condition(pubKey ed25519.PublicKey) *cryptoconditions.Conditions {
 	return cryptoconditions.NewSimpleCondition(cryptoconditions.CTEd25519Sha256, pubKey, conditionConst)
 }
 
@@ -64,16 +64,12 @@ func (t *Transaction) Sign(keyPairs []*KeyPair) error {
 
 	// Set transaction ID to ctnull value
 	t.ID = nil
-
 	signedTx := *t
 
 	// Compute signatures of inputs
 	for idx, input := range signedTx.Inputs {
 		var serializedTxn strings.Builder
-		s, err := t.String()
-		if err != nil {
-			return err
-		}
+		s := t.String()
 		serializedTxn.WriteString(s)
 
 		keyPair := keyPairs[idx]
@@ -96,14 +92,11 @@ func (t *Transaction) Sign(keyPairs []*KeyPair) error {
 			return errors.Wrap(err, "Could not create fulfillment")
 		}
 
-		// TODO - Not sure whether this should be ed25519Fulfillment.Encode()
-		// TODO - or ed25519Fulfillment.Condition().Encode()
-		// ff, err := ed25519Fulfillment.Encode()
-		ff, err := ed25519Fulfillment.Condition().Encode()
+		ff, err := ed25519Fulfillment.Encode()
 		if err != nil {
 			return err
 		}
-		ffSt := base58.Encode(ff)
+		ffSt := base64url.Encode(ff)
 		signedTx.Inputs[idx].Fulfillment = &ffSt
 	}
 	//Create ID of transaction (hash of body)

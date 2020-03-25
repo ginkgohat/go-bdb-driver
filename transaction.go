@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"net/url"
 	"strings"
 
-	"github.com/go-interledger/cryptoconditions"
-	"github.com/kalaspuffar/base64url"
+	cryptoconditions "github.com/Mashatan/go-cryptoconditions"
 	"github.com/mr-tron/base58/base58"
 	"github.com/pkg/errors"
 
@@ -104,7 +102,7 @@ func NewTransferTransaction(
 	return NewTransaction("TRANSFER", asset, metadata, inputs, outputs)
 }
 
-func NewOutput(condition cryptoconditions.Condition, amount string) (Output, error) {
+func NewOutput(condition cryptoconditions.Conditions, amount string) (Output, error) {
 	if amount == "" {
 		amount = "1"
 	}
@@ -115,7 +113,7 @@ func NewOutput(condition cryptoconditions.Condition, amount string) (Output, err
 
 	return Output{
 		Condition: Condition{
-			Uri: generateURI(condition.Type().String(), base64url.Encode(condition.Fingerprint())),
+			Uri: condition.URI(),
 			Details: ConditionDetail{
 				PublicKey: base58.Encode(condition.Fingerprint()),
 				Type:      strings.ToLower(condition.Type().String()),
@@ -124,27 +122,6 @@ func NewOutput(condition cryptoconditions.Condition, amount string) (Output, err
 		Amount:     amount,
 		PublicKeys: []string{base58.Encode(condition.Fingerprint())},
 	}, nil
-}
-
-// generateURI generates a URI for the given condition.
-// TODO - BigchainDB regexp to validate URI does not match with go-interledger cryptoconditions
-// because it forces order in cost and fpt query params
-// ^ni:///sha-256;([a-zA-Z0-9_-]{0,86})[?](fpt=(ed25519|threshold)-sha-256(&)?|cost=[0-9]+(&)?|subtypes=ed25519-sha-256(&)?){2,3}$
-// FIXME Example uri with base64url encoding that cant be parsed:
-// ni:///sha-256;0FOQ3QM4qNHvr-Yf0F37WNU8TUeqE-AykSBRhsnigNk?cost=131072&fpt=ed25519-sha-256
-func generateURI(cType, encodedFingerprint string) string {
-	params := make(url.Values)
-	// FIXME hardcoded costs
-	params.Set("cost", conditionConsts)
-	params.Set("fpt", strings.ToLower(cType))
-
-	uri := url.URL{
-		Scheme:   "ni",
-		Path:     "/sha-256;" + encodedFingerprint,
-		RawQuery: params.Encode(),
-	}
-
-	return uri.String()
 }
 
 /*
@@ -163,42 +140,22 @@ func (t *Transaction) createID() (string, error) {
 		Metadata:  t.Metadata,
 	}
 	// Serialize transaction - encoding/json follows RFC7159 and BDB marshalling
-	dbytes, err := tn.JSON()
-	if err != nil {
-		return "", err
-	}
+	dbytes := tn.JSON()
 
 	// Return hash of serialized txn object
 	h := sha3.Sum256(dbytes)
 	return hex.EncodeToString(h[:]), nil
 }
 
-func (t *Transaction) String() (string, error) {
-	dbytes, err := t.JSON()
-	if err != nil {
-		return "", err
-	}
-	dstr := string(dbytes[:])
-	return dstr, nil
+func (t *Transaction) String() string {
+	return string(t.JSON())
 }
 
-func (t *Transaction) JSON() ([]byte, error) {
-	buffer := &bytes.Buffer{}
-	encoder := json.NewEncoder(buffer)
-	encoder.SetEscapeHTML(false)
+func (t *Transaction) JSON() []byte {
+	bf := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(bf)
+	jsonEncoder.SetEscapeHTML(false)
+	jsonEncoder.Encode(t)
 
-	err := encoder.Encode(t)
-	if err != nil {
-		return nil, err
-	}
-	dbytes := buffer.Bytes()
-
-	buffer1 := &bytes.Buffer{}
-	err = json.Compact(buffer1, dbytes)
-	if err != nil {
-		return nil, err
-	}
-	dbytes = buffer1.Bytes()
-
-	return dbytes, nil
+	return bf.Bytes()
 }
