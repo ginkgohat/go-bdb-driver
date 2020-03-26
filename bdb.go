@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,11 +34,12 @@ func NewClient(bdbURL string, client *http.Client, header http.Header) (*Client,
 }
 
 // New default bigchaindb client
-// bdbURL host+port https://example.com:9984、
+// bdbURL host+port https://example.com:9984、http://localhost:9984
 func New(bdbURL string) (*Client, error) {
 	return NewClient(bdbURL, http.DefaultClient, http.Header{})
 }
 
+// http get request
 func (c *Client) get(ctx context.Context, path string, out interface{}) error {
 	targetURL := fmt.Sprintf("%s/%s", c.baseURL, path)
 	resp, err := c.httpClient.Get(strings.TrimSpace(targetURL))
@@ -52,26 +54,24 @@ func (c *Client) get(ctx context.Context, path string, out interface{}) error {
 	return json.NewDecoder(resp.Body).Decode(&out)
 }
 
+// http post request
 func (c *Client) post(ctx context.Context, path string, in, out interface{}) error {
 	targetURL := fmt.Sprintf("%s/%s", c.baseURL, path)
 
-	var buf io.ReadWriter
-	if in != nil {
-		buf = new(bytes.Buffer)
-		err := json.NewEncoder(buf).Encode(in)
-		if err != nil {
-			return err
-		}
+	jsonBody, err := enc(in)
+	if err != nil {
+		return err
 	}
 
-	resp, err := c.httpClient.Post(targetURL, "json", buf)
+	resp, err := c.httpClient.Post(targetURL, "application/json", jsonBody)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.New(resp.Status)
+		info, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(info))
 	}
 	return json.NewDecoder(resp.Body).Decode(&out)
 }
@@ -89,6 +89,8 @@ func (c *Client) GetEndpoint(ctx context.Context) (endpoint Endpoint, err error)
 }
 
 // GetTransaction get the transaction with the ID
+// If a transaction with ID transaction_id has been included in a committed block,
+// then this endpoint returns that transaction, otherwise the response will be 404 Not Found.
 func (c *Client) GetTransaction(ctx context.Context, transactionID string) (transaction Transaction, err error) {
 	path := fmt.Sprintf("%s/%s/%s", apiPath, transactionPath, transactionID)
 	err = c.get(ctx, path, &transaction)
@@ -107,8 +109,22 @@ func (c *Client) GetTransactionList(ctx context.Context, assetID, operation stri
 	return
 }
 
+// This endpoint is used to send a transaction to a BigchainDB network.
+// The transaction is put in the body of the request.
+func (c *Client) PostTransaction(ctx context.Context, mode string, tx Transaction) (*interface{}, error) {
+	var out *interface{}
+	if !(mode == sync || mode == commit) {
+		mode = async
+	}
+	path := fmt.Sprintf("%s/%s?mode=%s", apiPath, transactionPath, mode)
+	err := c.post(ctx, path, tx, out)
+	return out, err
+}
+
 // GetOutputs Get transaction outputs by public key
 // status spent | unspent | ""(all)
+// transactions outputs filtered by a given public key,
+// and optionally filtered to only include either spent or unspent outputs.
 func (c *Client) GetOutputs(ctx context.Context, publicKey string, status string) (outputs []OutputLocation, err error) {
 	path := fmt.Sprintf("%s/%s/?public_key=%s", apiPath, outputPath, publicKey)
 	if status == unspent {
@@ -164,12 +180,20 @@ func (c *Client) GetBlockHeight(ctx context.Context, transactionID string) (heig
 	return
 }
 
-func (c *Client) PostTransaction(ctx context.Context, mode string, tx interface{}) (*Transaction, error) {
-	var out *Transaction
-	if !(mode == sync || mode == commit) {
-		mode = async
+// parse request body
+func enc(v interface{}) (io.Reader, error) {
+	if v == nil {
+		return nil, nil
 	}
-	path := fmt.Sprintf("%s/%s?mode=%s", apiPath, transactionPath, mode)
-	err := c.post(ctx, path, tx, out)
-	return out, err
+
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+
+	err := encoder.Encode(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer, nil
 }
