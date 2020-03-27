@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// Client bigchaindb client
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
@@ -23,7 +24,7 @@ type Client struct {
 func NewClient(bdbURL string, client *http.Client, header http.Header) (*Client, error) {
 	_, err := url.Parse(bdbURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not parse bigchaindb url")
+		return nil, err
 	}
 
 	return &Client{
@@ -82,7 +83,7 @@ func (c *Client) GetNodeInfo(ctx context.Context) (node Node, err error) {
 	return
 }
 
-// GetNodeInfo get bigchaindb root endpoint info
+// GetEndpoint get bigchaindb root endpoint info
 func (c *Client) GetEndpoint(ctx context.Context) (endpoint Endpoint, err error) {
 	err = c.get(ctx, apiPath, &endpoint)
 	return
@@ -109,7 +110,7 @@ func (c *Client) GetTransactionList(ctx context.Context, assetID, operation stri
 	return
 }
 
-// This endpoint is used to send a transaction to a BigchainDB network.
+// PostTransaction This endpoint is used to send a transaction to a BigchainDB network.
 // The transaction is put in the body of the request.
 func (c *Client) PostTransaction(ctx context.Context, mode string, tx Transaction) (*interface{}, error) {
 	var out *interface{}
@@ -171,7 +172,7 @@ func (c *Client) GetBlock(ctx context.Context, height int) (block Block, err err
 	return
 }
 
-// GetBlockHeights  Retrieve a list of block IDs (block heights),
+// GetBlockHeight  Retrieve a list of block IDs (block heights),
 // such that the blocks with those IDs contain a transaction with the ID transaction_id.
 // A correct response may consist of an empty list or a list with one block ID.
 func (c *Client) GetBlockHeight(ctx context.Context, transactionID string) (heights []int, err error) {

@@ -19,8 +19,10 @@ const (
 	unspent = "unspent"
 
 	// condition
-	conditionConst  = 131072
-	conditionConsts = "131072"
+	conditionCost      = 131072
+	conditionCostStr   = "131072"
+	conditionURLPrefix = "ni:///sha-256"
+	conditionfpt       = "ed25519-sha-256"
 
 	// post mode
 	async  = "async"
